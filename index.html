@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>kurtio · 全栈 / 嵌入式 / Linux</title>
+<meta name="description" content="kurtio 的个人主页：后端、工业物联网、嵌入式与 Linux 系统折腾。" />
+<meta name="author" content="kurtio" />
+<meta name="theme-color" content="#0b1120" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="kurtio · 全栈 / 嵌入式 / Linux" />
+<meta property="og:description" content="kurtio 的个人主页：后端、工业物联网、嵌入式与 Linux 系统折腾。" />
+<meta property="og:image" content="assets/avatar.png" />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="assets/avatar.png" />
+<style>
+/* ===== 设计变量 ===== */
+:root {
+  --bg: #0b1120;
+  --bg-grad-1: rgba(34, 211, 238, 0.12);
+  --bg-grad-2: rgba(74, 222, 128, 0.10);
+  --panel: rgba(226, 232, 240, 0.045);
+  --panel-solid: #111b2e;
+  --line: rgba(148, 163, 184, 0.18);
+  --line-strong: rgba(148, 163, 184, 0.32);
+  --text: #e6edf7;
+  --muted: #94a3b8;
+  --accent: #22d3ee;
+  --accent-2: #4ade80;
+  --shadow: 0 18px 50px rgba(2, 6, 23, 0.55);
+  --radius: 16px;
+}
+html[data-theme="light"] {
+  --bg: #f6f8fb;
+  --bg-grad-1: rgba(34, 211, 238, 0.14);
+  --bg-grad-2: rgba(34, 197, 94, 0.12);
+  --panel: rgba(255, 255, 255, 0.72);
+  --panel-solid: #ffffff;
+  --line: rgba(15, 23, 42, 0.10);
+  --line-strong: rgba(15, 23, 42, 0.18);
+  --text: #101a2c;
+  --muted: #55657d;
+  --accent: #0e7490;
+  --accent-2: #15803d;
+  --shadow: 0 18px 40px rgba(15, 23, 42, 0.10);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(1100px 620px at 12% -8%, var(--bg-grad-1), transparent 60%),
+    radial-gradient(900px 520px at 92% 8%, var(--bg-grad-2), transparent 58%),
+    var(--bg);
+  color: var(--text);
+  font: 16px/1.75 -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .35s ease, color .35s ease;
+  overflow-x: hidden;
+}
+::selection { background: var(--accent); color: #06121a; }
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+
+.mono { font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+.wrap { width: min(1080px, calc(100% - 40px)); margin-inline: auto; }
+
+/* 背景网格 */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  opacity: .28;
+  mask-image: radial-gradient(circle at 50% 0%, #000 0%, transparent 72%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ===== 导航 ===== */
+header.nav {
+  position: sticky; top: 0; z-index: 40;
+  backdrop-filter: blur(14px);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  border-bottom: 1px solid var(--line);
+}
+.nav-inner { display: flex; align-items: center; gap: 20px; height: 62px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .02em; }
+.brand-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--accent-2);
+  box-shadow: 0 0 12px var(--accent-2);
+}
+.brand span { color: var(--accent); }
+nav.links { display: flex; gap: 4px; margin-left: auto; }
+nav.links a {
+  padding: 7px 11px; border-radius: 9px; font-size: 14px; color: var(--muted);
+  transition: color .2s, background-color .2s;
+}
+nav.links a:hover, nav.links a[aria-current="true"] { color: var(--text); background: var(--panel); }
+.icon-btn {
+  appearance: none; cursor: pointer;
+  width: 36px; height: 36px; display: grid; place-items: center;
+  border-radius: 10px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--text); font-size: 15px;
+  transition: border-color .2s, transform .2s;
+}
+.icon-btn:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+.menu-btn { display: none; }
+
+/* ===== 通用区块 ===== */
+section { padding: 76px 0 12px; }
+.sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 28px; }
+.sec-num { font-size: 13px; color: var(--accent); letter-spacing: .12em; }
+.sec-title { margin: 0; font-size: clamp(24px, 3.4vw, 32px); letter-spacing: -.01em; }
+.sec-rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line-strong), transparent); }
+.lead { color: var(--muted); max-width: 62ch; }
+
+/* ===== Hero ===== */
+.hero { padding: 84px 0 30px; }
+.hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 44px; align-items: center; }
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--accent-2);
+  border: 1px solid color-mix(in srgb, var(--accent-2) 35%, transparent);
+  background: color-mix(in srgb, var(--accent-2) 10%, transparent);
+  padding: 5px 12px; border-radius: 999px;
+}
+.hero-top { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+.avatar {
+  width: 62px; height: 62px; border-radius: 50%; object-fit: cover;
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 8px 24px rgba(2, 6, 23, .4);
+}
+.eyebrow i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); }
+h1.name {
+  margin: 0 0 10px;
+  font-size: clamp(42px, 8vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -.035em;
+  font-weight: 800;
+}
+h1.name em { font-style: normal; color: var(--accent); }
+.tagline { font-size: clamp(17px, 2vw, 20px); color: var(--text); margin: 0 0 14px; }
+.tagline b { color: var(--accent-2); font-weight: 600; }
+.hero p.desc { color: var(--muted); margin: 0 0 26px; max-width: 54ch; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 18px; border-radius: 11px; font-size: 14.5px; font-weight: 600;
+  border: 1px solid var(--line-strong); background: var(--panel); color: var(--text);
+  transition: transform .18s, border-color .18s, background-color .18s, box-shadow .18s;
+}
+.btn:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 8px 24px rgba(34,211,238,.16); }
+.btn.primary {
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  border-color: transparent; color: #04121a;
+}
+.hero-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 26px; font-size: 13.5px; color: var(--muted); }
+.hero-meta span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* 终端卡片 */
+.term {
+  border: 1px solid var(--line-strong); border-radius: var(--radius);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--panel-solid) 92%, transparent), color-mix(in srgb, var(--panel-solid) 76%, transparent));
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transform: perspective(1100px) rotateY(-4deg) rotateX(2deg);
+  transition: transform .5s ease;
+}
+.term:hover { transform: perspective(1100px) rotateY(0deg) rotateX(0deg); }
+.term-bar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 55%, transparent); }
+.term-bar i { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
+.term-bar i:nth-child(2) { background: #febc2e; }
+.term-bar i:nth-child(3) { background: #28c840; }
+.term-bar .path { margin-left: 8px; font-size: 12px; color: var(--muted); }
+.term-body { padding: 18px 18px 22px; font-size: 13.5px; line-height: 1.95; min-height: 268px; }
+.term-body .line { white-space: pre-wrap; word-break: break-word; }
+.term-body .prompt { color: var(--accent-2); }
+.term-body .cmd { color: var(--text); }
+.term-body .out { color: var(--muted); }
+.term-body .ok { color: var(--accent); }
+.caret { display: inline-block; width: 7px; height: 15px; background: var(--accent); vertical-align: -2px; animation: blink 1.05s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ===== 关于 ===== */
+.about-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; align-items: start; }
+.about-text p { color: var(--muted); margin: 0 0 16px; }
+.about-text p strong { color: var(--text); font-weight: 600; }
+.facts { display: grid; gap: 10px; }
+.fact {
+  border: 1px solid var(--line); background: var(--panel);
+  border-radius: 12px; padding: 13px 15px;
+  display: flex; justify-content: space-between; gap: 12px; align-items: center;
+  font-size: 13.5px;
+}
+.fact span { color: var(--muted); }
+.fact b { color: var(--text); font-weight: 600; text-align: right; }
+
+/* ===== 技术栈 ===== */
+.stack-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.stack-card {
+  border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px;
+  background: var(--panel);
+  transition: border-color .2s, transform .2s;
+}
+.stack-card:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+.stack-card h3 { margin: 0 0 12px; font-size: 14px; letter-spacing: .06em; color: var(--accent); text-transform: uppercase; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-size: 12.8px; padding: 5px 11px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--text);
+  background: color-mix(in srgb, var(--bg) 40%, transparent);
+  font-family: "JetBrains Mono", Consolas, monospace;
+}
+.chip.muted { color: var(--muted); }
+
+/* ===== 项目 ===== */
+.proj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.proj {
+  border: 1px solid var(--line); border-radius: 14px; padding: 20px;
+  background: var(--panel); display: flex; flex-direction: column; gap: 10px;
+  transition: transform .22s, border-color .22s, box-shadow .22s;
+}
+.proj:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: var(--shadow); }
+.proj-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.proj h3 { margin: 0; font-size: 16px; font-family: "JetBrains Mono", Consolas, monospace; }
+.proj .tag { font-size: 11.5px; color: var(--accent-2); border: 1px solid color-mix(in srgb, var(--accent-2) 35%, transparent); padding: 2px 8px; border-radius: 6px; }
+.proj p { margin: 0; color: var(--muted); font-size: 14px; flex: 1; }
+.proj .meta { font-size: 12.5px; color: var(--muted); display: flex; gap: 14px; }
+.proj .meta b { color: var(--accent); font-weight: 600; }
+.note {
+  margin-top: 14px; font-size: 13px; color: var(--muted);
+  border-left: 2px solid var(--line-strong); padding-left: 12px;
+}
+
+/* ===== 联系 ===== */
+.contact-card {
+  border: 1px solid var(--line-strong); border-radius: 18px;
+  padding: 36px clamp(20px, 4vw, 44px);
+  background:
+    radial-gradient(600px 240px at 0% 0%, var(--bg-grad-1), transparent 70%),
+    radial-gradient(500px 240px at 100% 100%, var(--bg-grad-2), transparent 70%),
+    var(--panel);
+  display: flex; flex-wrap: wrap; gap: 26px; align-items: center; justify-content: space-between;
+}
+.contact-card h2 { margin: 0 0 8px; font-size: clamp(22px, 3vw, 28px); }
+.contact-card p { margin: 0; color: var(--muted); max-width: 46ch; }
+.contact-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.copy-btn { position: relative; }
+
+/* ===== 页脚 ===== */
+footer { margin-top: 80px; border-top: 1px solid var(--line); padding: 26px 0 34px; }
+.foot { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; color: var(--muted); font-size: 13px; }
+.foot a:hover { color: var(--accent); }
+
+/* 提示条 */
+.toast {
+  position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 16px);
+  background: var(--panel-solid); border: 1px solid var(--line-strong);
+  color: var(--text); padding: 10px 18px; border-radius: 10px; font-size: 13.5px;
+  box-shadow: var(--shadow); opacity: 0; pointer-events: none; z-index: 60;
+  transition: opacity .25s, transform .25s;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* 滚动入场 */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.in { opacity: 1; transform: none; }
+
+/* ===== 响应式 ===== */
+@media (max-width: 900px) {
+  .hero-grid, .about-grid { grid-template-columns: 1fr; }
+  .term { transform: none; }
+  .proj-grid { grid-template-columns: repeat(2, 1fr); }
+  .stack-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .menu-btn { display: grid; }
+  nav.links {
+    position: absolute; top: 62px; left: 0; right: 0;
+    flex-direction: column; gap: 2px; padding: 10px 20px 18px;
+    background: var(--panel-solid); border-bottom: 1px solid var(--line);
+    display: none;
+  }
+  nav.links.open { display: flex; }
+  .hero { padding-top: 56px; }
+  .proj-grid { grid-template-columns: 1fr; }
+  .contact-card { padding: 26px 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .term, .btn, .proj { transition: none; }
+  .caret { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top" aria-label="返回顶部">
+      <span class="brand-dot" aria-hidden="true"></span>
+      <span class="mono">kurtio<span>@</span>arch</span>
+    </a>
+    <nav class="links" id="navLinks" aria-label="主导航">
+      <a href="#about">关于</a>
+      <a href="#stack">技术栈</a>
+      <a href="#projects">项目</a>
+      <a href="#contact">联系</a>
+    </nav>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="切换深浅色" title="切换深浅色">☾</button>
+    <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="打开菜单" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ===== Hero ===== -->
+  <div class="wrap hero">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-top">
+          <img class="avatar" src="assets/avatar.png" alt="kurtio 的卡通头像" width="62" height="62" />
+          <div class="eyebrow"><i aria-hidden="true"></i>可接受开源合作与排障咨询</div>
+        </div>
+        <h1 class="name">Hi，我是 <em>kurtio</em></h1>
+        <p class="tagline">写代码，也写 <b>systemd unit</b>；调服务，也调 <b>串口</b>。</p>
+        <p class="desc">
+          一名把系统折腾到“刚好顺手”的老程序员。日常在 Arch Linux 上工作，
+          关注后端服务、工业物联网接入、嵌入式调试与自托管。
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="https://github.com/kurtio" target="_blank" rel="noopener">
+            GitHub <span aria-hidden="true">↗</span>
+          </a>
+          <a class="btn" href="mailto:kurtio@users.noreply.github.com">发邮件</a>
+          <a class="btn" href="#projects">看看项目</a>
+        </div>
+        <div class="hero-meta">
+          <span>📍 中国 · 可远程</span>
+          <span>🕘 UTC+8</span>
+          <span>🐧 Arch Linux</span>
+          <span id="localTime">--:--</span>
+        </div>
+      </div>
+
+      <div class="term" aria-label="终端示例">
+        <div class="term-bar">
+          <i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i>
+          <span class="path mono">kurtio — zsh — 80×24</span>
+        </div>
+        <div class="term-body mono" id="termBody">
+          <div class="line" data-out="kurtio"></div>
+          <div class="line" data-out="Arch Linux x86_64 · zsh 5.9"></div>
+          <div class="line" data-out="工业物联网 / 逆向工程 / 自托管"></div>
+          <div class="line" data-out="on branch main · working tree clean"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 关于 ===== -->
+  <section id="about">
+    <div class="wrap reveal">
+      <div class="sec-head">
+        <span class="sec-num mono">01</span>
+        <h2 class="sec-title">关于我</h2>
+        <div class="sec-rule" aria-hidden="true"></div>
+      </div>
+      <div class="about-grid">
+        <div class="about-text">
+          <p>
+            从 Web 后端一路写到嵌入式，<strong>十年以上的工程经验</strong>大多花在“让系统稳定跑起来”这件事上：
+            协议解析、数据采集、部署脚本、线上排障。
+          </p>
+          <p>
+            偏好<strong>可维护性高于花哨</strong>。写代码时会给下一个人留注释，写脚本时会顺手加 <code class="mono">--dry-run</code>，
+            做运维时尽量让变更可回滚。
+          </p>
+          <p>
+            业余时间折腾 Minecraft 模组、浏览器插件和家里那台常年开着的自托管服务器。
+            也愿意帮人看 Linux 环境的疑难杂症。
+          </p>
+        </div>
+        <div class="facts">
+          <div class="fact"><span>主要身份</span><b>后端 / 嵌入式工程师</b></div>
+          <div class="fact"><span>主力环境</span><b>Arch Linux</b></div>
+          <div class="fact"><span>关注方向</span><b>工业物联网 · 自托管</b></div>
+          <div class="fact"><span>可接受的合作</span><b>开源维护 · 协议解析</b></div>
+          <div class="fact"><span>回复时区</span><b>UTC+8</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 技术栈 ===== -->
+  <section id="stack">
+    <div class="wrap reveal">
+      <div class="sec-head">
+        <span class="sec-num mono">02</span>
+        <h2 class="sec-title">技术栈</h2>
+        <div class="sec-rule" aria-hidden="true"></div>
+      </div>
+      <p class="lead">按“能独立交付”来列，不写只是看过文档的东西。</p>
+
+      <div class="stack-grid" style="margin-top:22px">
+        <div class="stack-card">
+          <h3>语言</h3>
+          <div class="chips">
+            <span class="chip">Go</span>
+            <span class="chip">C / C++</span>
+            <span class="chip">Python</span>
+            <span class="chip">TypeScript</span>
+            <span class="chip">Shell</span>
+            <span class="chip muted">Rust（学习中）</span>
+          </div>
+        </div>
+        <div class="stack-card">
+          <h3>平台与工具</h3>
+          <div class="chips">
+            <span class="chip">Arch Linux</span>
+            <span class="chip">Docker</span>
+            <span class="chip">Git</span>
+            <span class="chip">Neovim</span>
+            <span class="chip">GitHub Actions</span>
+            <span class="chip">systemd</span>
+          </div>
+        </div>
+        <div class="stack-card">
+          <h3>领域</h3>
+          <div class="chips">
+            <span class="chip">REST / gRPC</span>
+            <span class="chip">Modbus · 串口采集</span>
+            <span class="chip">嵌入式交叉编译</span>
+            <span class="chip">逆向与协议分析</span>
+            <span class="chip">内网排障</span>
+          </div>
+        </div>
+        <div class="stack-card">
+          <h3>正在学</h3>
+          <div class="chips">
+            <span class="chip muted">Rust 异步运行时</span>
+            <span class="chip muted">Go 项目分层与测试</span>
+            <span class="chip muted">可观测性（metrics / tracing）</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 项目 ===== -->
+  <section id="projects">
+    <div class="wrap reveal">
+      <div class="sec-head">
+        <span class="sec-num mono">03</span>
+        <h2 class="sec-title">项目</h2>
+        <div class="sec-rule" aria-hidden="true"></div>
+      </div>
+      <div class="proj-grid">
+        <article class="proj">
+          <div class="proj-top">
+            <h3>protocol-lab</h3>
+            <span class="tag">示例</span>
+          </div>
+          <p>工业协议解析与回放工具集，支持串口抓包、报文拆解和离线复现。</p>
+          <div class="meta mono"><span><b>Go</b></span><span>CLI</span></div>
+        </article>
+        <article class="proj">
+          <div class="proj-top">
+            <h3>dotfiles</h3>
+            <span class="tag">示例</span>
+          </div>
+          <p>Arch 环境的配置仓库：zsh、Neovim、systemd 单元与安装脚本。</p>
+          <div class="meta mono"><span><b>Shell</b></span><span>Arch</span></div>
+        </article>
+        <article class="proj">
+          <div class="proj-top">
+            <h3>selfhost-stack</h3>
+            <span class="tag">示例</span>
+          </div>
+          <p>自托管服务编排：监控、备份、内网穿透，一条命令起一套。</p>
+          <div class="meta mono"><span><b>Docker</b></span><span>Compose</span></div>
+        </article>
+      </div>
+      <p class="note">以上为占位卡片，替换成你的真实仓库后把 <code class="mono">&lt;article class="proj"&gt;</code> 里的标题和链接改掉即可。</p>
+    </div>
+  </section>
+
+  <!-- ===== 联系 ===== -->
+  <section id="contact">
+    <div class="wrap reveal">
+      <div class="contact-card">
+        <div>
+          <h2>有事可以直接说</h2>
+          <p>开源协作、协议调试、Linux 环境排障都欢迎。描述里带上环境、版本和复现步骤，回复会快很多。</p>
+        </div>
+        <div class="contact-actions">
+          <a class="btn primary" href="https://github.com/kurtio" target="_blank" rel="noopener">GitHub ↗</a>
+          <button class="btn copy-btn" id="copyMail" type="button" data-mail="kurtio@users.noreply.github.com">复制邮箱</button>
+          <a class="btn" href="mailto:kurtio@users.noreply.github.com">写邮件</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span class="mono">© <span id="year">2026</span> kurtio · 用 Markdown 和一点 CSS 维护</span>
+    <span class="mono">
+      <a href="https://github.com/kurtio/kurtio" target="_blank" rel="noopener">profile repo</a>
+      &nbsp;·&nbsp; <a href="./404.html">404</a>
+    </span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===== 主题：默认深色，记忆用户选择 ===== */
+(function () {
+  var root = document.documentElement;
+  var btn = document.getElementById('themeBtn');
+  var saved = null;
+  try { saved = localStorage.getItem('kurtio-theme'); } catch (e) {}
+  if (saved === 'light' || saved === 'dark') root.setAttribute('data-theme', saved);
+
+  function sync() {
+    var light = root.getAttribute('data-theme') === 'light';
+    btn.textContent = light ? '☀' : '☾';
+    btn.setAttribute('aria-label', light ? '切换到深色' : '切换到浅色');
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', light ? '#f6f8fb' : '#0b1120');
+  }
+  sync();
+
+  btn.addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('kurtio-theme', next); } catch (e) {}
+    sync();
+  });
+})();
+
+/* ===== 移动端菜单 ===== */
+(function () {
+  var btn = document.getElementById('menuBtn');
+  var links = document.getElementById('navLinks');
+  btn.addEventListener('click', function () {
+    var open = links.classList.toggle('open');
+    btn.setAttribute('aria-expanded', String(open));
+    btn.textContent = open ? '✕' : '☰';
+  });
+  links.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') {
+      links.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.textContent = '☰';
+    }
+  });
+})();
+
+/* ===== 终端逐行输入 ===== */
+(function () {
+  var body = document.getElementById('termBody');
+  var lines = Array.prototype.slice.call(body.querySelectorAll('.line'));
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var cmds = [
+    'whoami',
+    'uname -srm',
+    'cat ~/focus.txt',
+    'git status -sb'
+  ];
+
+  function render(line, cmdText, outText, typed, done) {
+    line.innerHTML = '<span class="prompt">λ</span> <span class="cmd">' + cmdText + '</span>' +
+      (typed ? '<span class="caret"></span>' : '') +
+      (done ? '\n<span class="out">' + outText + '</span>' : '');
+  }
+
+  if (reduce) {
+    lines.forEach(function (line, i) { render(line, cmds[i], line.dataset.out, 0, true); });
+    return;
+  }
+
+  var idx = 0;
+  function nextLine() {
+    if (idx >= lines.length) return;
+    var line = lines[idx], target = cmds[idx], n = 0;
+    var timer = setInterval(function () {
+      n += 1;
+      render(line, target.slice(0, n), line.dataset.out, n < target.length, false);
+      if (n >= target.length) {
+        clearInterval(timer);
+        setTimeout(function () {
+          render(line, target, line.dataset.out, false, true);
+          idx += 1;
+          setTimeout(nextLine, 220);
+        }, 120);
+      }
+    }, 55);
+  }
+  setTimeout(nextLine, 420);
+})();
+
+/* ===== 滚动入场 + 导航高亮 ===== */
+(function () {
+  var items = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    items.forEach(function (el) { el.classList.add('in'); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+  items.forEach(function (el) { io.observe(el); });
+
+  var sections = ['about', 'stack', 'projects', 'contact'].map(function (id) { return document.getElementById(id); });
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('#navLinks a'));
+  var nav = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      navLinks.forEach(function (a) {
+        a.setAttribute('aria-current', a.getAttribute('href') === '#' + en.target.id ? 'true' : 'false');
+      });
+    });
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  sections.forEach(function (s) { if (s) nav.observe(s); });
+})();
+
+/* ===== 本地时间 / 年份 / 复制邮箱 ===== */
+(function () {
+  var time = document.getElementById('localTime');
+  function tick() {
+    var d = new Date();
+    time.textContent = d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Shanghai' });
+  }
+  tick(); setInterval(tick, 30000);
+
+  document.getElementById('year').textContent = String(new Date().getFullYear());
+
+  var toast = document.getElementById('toast');
+  var toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1800);
+  }
+
+  var btn = document.getElementById('copyMail');
+  btn.addEventListener('click', function () {
+    var mail = btn.dataset.mail;
+    function fallback() {
+      var input = document.createElement('input');
+      input.value = mail;
+      document.body.appendChild(input);
+      input.select();
+      try { document.execCommand('copy'); showToast('邮箱已复制'); }
+      catch (e) { showToast('复制失败，请手动选择：' + mail); }
+      document.body.removeChild(input);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(mail).then(function () { showToast('邮箱已复制'); }, fallback);
+    } else {
+      fallback();
+    }
+  });
+})();
+</script>
+</body>
+</html>

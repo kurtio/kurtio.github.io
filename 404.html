@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>404 · 页面不存在 | kurtio</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<style>
+  :root { --bg:#0b1120; --text:#e6edf7; --muted:#94a3b8; --accent:#22d3ee; --accent2:#4ade80; --line:rgba(148,163,184,.18); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    padding: 24px;
+    background:
+      radial-gradient(900px 500px at 20% 0%, rgba(34,211,238,.12), transparent 60%),
+      radial-gradient(800px 480px at 90% 10%, rgba(74,222,128,.10), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font: 16px/1.7 -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .box { width: min(620px, 100%); }
+  .code {
+    font: 700 clamp(64px, 16vw, 132px)/1 "JetBrains Mono", Consolas, monospace;
+    letter-spacing: -.04em;
+    background: linear-gradient(110deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    margin: 0 0 8px;
+  }
+  .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+  .path { color: var(--muted); font-size: 13.5px; margin-bottom: 22px; word-break: break-all; }
+  h1 { font-size: clamp(22px, 4vw, 28px); margin: 0 0 12px; }
+  p { color: var(--muted); margin: 0 0 26px; }
+  .term {
+    border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px;
+    background: rgba(226,232,240,.045); font-size: 13.5px; line-height: 1.9;
+    margin-bottom: 26px; overflow-x: auto;
+  }
+  .term .p { color: var(--accent2); } .term .o { color: var(--muted); }
+  a.btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 18px; border-radius: 11px; text-decoration: none;
+    font-weight: 600; font-size: 14.5px;
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+    color: #04121a;
+  }
+  a.ghost { background: transparent; color: var(--text); border: 1px solid rgba(148,163,184,.32); }
+</style>
+</head>
+<body>
+  <div class="box">
+    <p class="code mono">404</p>
+    <div class="path mono" id="path">请求的地址不存在</div>
+    <h1>这一页走丢了</h1>
+    <p>页面可能被移动或删除。如果你是从旧链接过来的，回首页重新找一下。</p>
+    <div class="term mono">
+      <div><span class="p">λ</span> ls /var/www/kurtio.github.io/here</div>
+      <div class="o">ls: cannot access 'here': No such file or directory</div>
+      <div><span class="p">λ</span> echo $?</div>
+      <div class="o">127</div>
+    </div>
+    <a class="btn" href="/">回首页</a>
+    <a class="btn ghost" href="https://github.com/kurtio">GitHub</a>
+  </div>
+<script>
+  var p = document.getElementById('path');
+  if (p && /^https?:$/.test(location.protocol) && location.pathname !== '/') {
+    p.textContent = location.pathname + location.search;
+  }
+</script>
+</body>
+</html>
